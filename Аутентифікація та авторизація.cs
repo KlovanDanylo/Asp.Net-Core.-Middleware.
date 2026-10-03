@@ -7,11 +7,9 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Подключение базы данных Entity Framework (In-Memory)
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseInMemoryDatabase("TaskManagerDb"));
 
-// Настройка Аутентификации через Cookie
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
@@ -127,7 +125,6 @@ app.MapPost("/Account/Login", async ([FromForm] string username, [FromForm] stri
         return Results.Content(GetHtmlWrapper("Помилка", "<div class='alert alert-danger'>Невірний логін або пароль!</div><a href='/Account/Login' class='btn btn-secondary'>Назад</a>"), "text/html");
     }
 
-    // Сохранение идентификатора пользователя в Claim (ClaimTypes.NameIdentifier)
     var claims = new List<Claim>
     {
         new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
@@ -149,7 +146,6 @@ app.MapGet("/Account/Logout", async (HttpContext context) =>
 
 app.MapGet("/Account/Profile", [Authorize] async (HttpContext context, AppDbContext db) =>
 {
-    // Получение ID из Claim
     int userId = int.Parse(context.User.FindFirstValue(ClaimTypes.NameIdentifier)!);
     var user = await db.Users.FindAsync(userId);
 
@@ -173,13 +169,11 @@ app.MapGet("/Account/Profile", [Authorize] async (HttpContext context, AppDbCont
 #region 3. Управление заметками (Task Manager)
 app.MapGet("/Tasks", [Authorize] async (string? search, HttpContext context, AppDbContext db) =>
 {
-    // Получение ID пользователя из Claims
     int userId = int.Parse(context.User.FindFirstValue(ClaimTypes.NameIdentifier)!);
     string username = context.User.Identity?.Name ?? "";
 
     var query = db.UserTasks.Where(t => t.UserId == userId);
 
-    // Поиск по заметкам
     if (!string.IsNullOrWhiteSpace(search))
     {
         query = query.Where(t => t.Title.Contains(search) || t.Description.Contains(search));
