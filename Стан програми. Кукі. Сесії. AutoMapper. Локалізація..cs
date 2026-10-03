@@ -64,7 +64,6 @@ app.MapGet("/settings", (HttpContext context) =>
 
 app.MapPost("/settings", ([FromForm] string theme, HttpContext context) =>
 {
-    // Записываем куку на 30 дней
     context.Response.Cookies.Append("site_theme", theme, new CookieOptions
     {
         Expires = DateTimeOffset.Now.AddDays(30)
