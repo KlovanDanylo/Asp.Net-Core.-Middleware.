@@ -22,7 +22,6 @@ app.MapGet("/", () => Results.Content(GetHtmlWrapper("Главная", @"
         </div>
     </div>"), "text/html"));
 
-// Добавление рецепта (Форма)
 app.MapGet("/recipes/create", () =>
 {
     string body = @"
