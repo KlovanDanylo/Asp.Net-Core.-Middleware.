@@ -145,7 +145,6 @@ public class HomeController : Controller
         return View(book);
     }
 
-    // Завдання 1: Додавання коментаря
     [HttpPost]
     public IActionResult AddComment(int bookId, string user, string text)
     {
