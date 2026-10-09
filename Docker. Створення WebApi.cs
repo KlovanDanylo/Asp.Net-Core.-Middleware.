@@ -6,28 +6,21 @@ using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ============================================================================
-// 1. РЕГИСТРАЦИЯ СЕРВИСОВ И БАЗ ДАННЫХ
-// ============================================================================
-
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
 
-// Подключение к PostgreSQL
 var postgresConnection = builder.Configuration.GetConnectionString("Postgres") 
     ?? "Host=db;Database=appdb;Username=postgres;Password=postgres";
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(postgresConnection));
 
-// Подключение к Redis
 var redisConnection = builder.Configuration.GetConnectionString("Redis") ?? "redis:6379";
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp => 
     ConnectionMultiplexer.Connect(redisConnection));
 
 var app = builder.Build();
 
-// Автоматическое создание таблиц и сидирование данных в БД при старте
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -63,10 +56,6 @@ if (app.Environment.IsDevelopment())
 app.MapControllers();
 app.Run();
 
-
-// ============================================================================
-// 2. МОДЕЛИ И DbContext (PostgreSQL)
-// ============================================================================
 
 public class Movie
 {
@@ -115,11 +104,6 @@ public class AppDbContext : DbContext
     public DbSet<Card> Cards => Set<Card>();
 }
 
-
-// ============================================================================
-// 3. ОСНОВНОЕ ЗАДАНИЕ: Weather API (/weather/today & /weather/{city})
-// ============================================================================
-
 [ApiController]
 [Route("weather")]
 public class WeatherController : ControllerBase
@@ -153,10 +137,6 @@ public class WeatherController : ControllerBase
 }
 
 
-// ============================================================================
-// 4. ДОПОЛНИТЕЛЬНОЕ ЗАДАНИЕ №1: Movies Vote API
-// ============================================================================
-
 [ApiController]
 [Route("movies")]
 public class MoviesController : ControllerBase
@@ -178,11 +158,6 @@ public class MoviesController : ControllerBase
         return Ok(movie);
     }
 }
-
-
-// ============================================================================
-// 5. ДОПОЛНИТЕЛЬНОЕ ЗАДАНИЕ №2: Kanban API (Postgres + Redis Cache)
-// ============================================================================
 
 [ApiController]
 [Route("boards")]
@@ -245,7 +220,6 @@ public class KanbanController : ControllerBase
         existing.Description = board.Description;
         await _db.SaveChangesAsync();
 
-        // Инвалидация кеша в Redis
         await _redis.KeyDeleteAsync($"board:{id}");
         return Ok(existing);
     }
@@ -263,7 +237,6 @@ public class KanbanController : ControllerBase
         return NoContent();
     }
 
-    // Эндпоинт метрик hits/misses для Redis
     [HttpGet("cache-metrics")]
     public IActionResult GetCacheMetrics()
     {
